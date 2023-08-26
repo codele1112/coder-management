@@ -19,14 +19,10 @@ app.use(cors());
 
 app.use("/", indexRouter);
 
-const mongoose = require("mongoose");
 /* DB connection*/
-const mongoURI = process.env.MONGODB_URI;
 
-mongoose
-  .connect(mongoURI)
-  .then(() => console.log(`DB connected ${mongoURI}`))
-  .catch((err) => console.log(err));
+const db = require("./config/db");
+db.connect();
 
 // catch 404 and forard to error handler
 app.use((req, res, next) => {
