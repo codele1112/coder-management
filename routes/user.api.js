@@ -1,13 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const { body, param } = require("express-validator");
+const { body } = require("express-validator");
 const {
   createUser,
   getAllUsers,
   searchUser,
   updateUserById,
   deleteUserById,
-  getUserById,
 } = require("../controllers/user.controllers.js");
 
 /**
@@ -34,29 +33,36 @@ router.post(
   createUser
 );
 
-/**
+/** 
  * @route GET api/users
  * @description Get a list of users
- * @access private
+@access public
  * @allowedQueries: name
  */
 router.get("/", getAllUsers);
 
-// Search for an user by name & get all task of an user by name
+/**
+ * @route GET api/users/:targetName
+ * @description Get an users by name
+ * @access public
+ * @allowedQueries: name
+ */
+
 router.get("/:targetName", searchUser);
 
-//Update an user by ID
-router.put("/:id", updateUserById);
-
-//Delete an user by ID
-router.delete("/:id", deleteUserById);
-
 /**
- * @route GET api/users/:id
- * @description Get user by id
+ * @route PUT api/users/:id
+ * @description update an users by id
  * @access public
  */
-// router.get("/:id", getUserById);
+router.put("/:id", updateUserById);
+
+/**
+ * @route DELETE api/users/:id
+ * @description delete an users by id
+ * @access public
+ */
+router.delete("/:id", deleteUserById);
 
 //export
 module.exports = router;

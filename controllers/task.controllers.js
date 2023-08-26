@@ -5,30 +5,16 @@ const User = require("../models/User.js");
 
 const taskController = {};
 
-//5. [POST] Create a task
+//[POST] Create a task
 taskController.createTask = async (req, res, next) => {
-  const data = req.body;
+  const task = req.body;
   try {
-    if (!data) throw new AppError(402, "Bad Request", "Create User Error");
-
+    if (!task) throw new AppError(402, "Bad Request", "Create task Error");
     let userFound;
+    userFound = await User.findById(new ObjectId(task.assignee));
+    userFound = await userFound.save();
 
-    if (data.assignee) {
-      userFound = await User.findById(new ObjectId(data.assignee));
-
-      userFound = await userFound.save();
-
-      console.log("data task", data);
-
-      let status = "pending";
-      if (userFound.role === "employee") {
-        status = "working";
-      } else if (userFound.role === "manager") {
-        status = "review";
-      }
-      data.status = status;
-    }
-    const created = await Task.create(data);
+    const created = await Task.create(task);
     if (userFound) {
       userFound.tasks.push(new ObjectId(created.id));
       userFound.save();
@@ -47,40 +33,35 @@ taskController.createTask = async (req, res, next) => {
   }
 };
 
-//9. [PUT] update status of task
+//[PUT] Update the status of a task.
 
-taskController.UpdateStatus = async (req, res, next) => {
+taskController.updateStatus = async (req, res, next) => {
   const taskId = req.params.id;
-  const { updateStatus } = req.body;
+  const updateData = req.body;
 
   try {
-    let taskFound = await Task.findById({ _id: ObjectId(taskId) });
+    const currentData = await Task.findOne({ _id: taskId });
 
-    let userFound = await User.findById(ObjectId(updateStatus));
-    userFound.tasks.push(ObjectId(taskId));
-    userFound = await userFound.save();
-
-    taskFound.assignee = ObjectId(updateStatus);
-    if (taskFound.status === "done" && updateStatus !== "archive")
+    if (currentData.status === "done" && updateData.status !== "archive") {
       throw new AppError(402, "Bad Request", "This task can't be changed");
-    else if (taskFound.status === "archive") {
+    } else if (currentData.status === "archive") {
       throw new AppError(
         402,
         "Bad Request",
         "This task is already archived and cannot be changed"
       );
     } else {
-      const newUpdate = await Task.findByIdAndUpdate(taskId, updateStatus, {
+      const newUpdate = await Task.findByIdAndUpdate(taskId, updateData, {
         new: true,
       });
       sendResponse(res, 200, true, { newUpdate }, null, `Update Task Success`);
     }
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    next(error);
   }
 };
 
-//[GET] all tasks
+//[GET] get all tasks
 taskController.getAllTasks = async (req, res, next) => {
   const filter = {};
   try {
@@ -102,7 +83,7 @@ taskController.getAllTasks = async (req, res, next) => {
 taskController.getTaskById = async (req, res, next) => {
   const taskId = req.params.id;
   try {
-    const found = await Task.findById(taskId);
+    const found = await Task.findOne({ _id: taskId });
     if (!found || found.isDeleted) throw new AppError(404, "Task not Found");
     sendResponse(
       res,
@@ -117,7 +98,7 @@ taskController.getTaskById = async (req, res, next) => {
   }
 };
 
-//10. [DELETE] a task by ID (soft delete)
+//[DELETE] a task by ID (soft delete)
 taskController.deleteTaskById = async (req, res, next) => {
   const taskId = req.params.id;
   const options = { new: true };

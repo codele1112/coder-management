@@ -8,12 +8,15 @@ const userController = {};
 userController.createUser = async (req, res, next) => {
   const user = req.body;
   try {
-    const createdNewUser = await User.create(user);
+    if (!user) throw new AppError(402, "Bad Request", "Create user Error");
+
+    const created = await User.create(user);
+
     sendResponse(
       res,
       200,
       true,
-      { data: createdNewUser },
+      { data: created },
       null,
       "Create user Success"
     );
@@ -22,7 +25,7 @@ userController.createUser = async (req, res, next) => {
   }
 };
 
-//2. [GET] all users - done
+//[GET] all users - done
 userController.getAllUsers = async (req, res, next) => {
   const filter = {};
   try {
@@ -32,7 +35,7 @@ userController.getAllUsers = async (req, res, next) => {
       res,
       200,
       true,
-      { listOfFound },
+      { data: listOfFound },
       null,
       "Found list of users success"
     );
